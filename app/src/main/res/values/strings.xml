@@ -1,0 +1,50 @@
+<resources>
+    <string name="app_name">Friend Finder</string>
+    <string name="title_activity_friend_list">FriendList</string>
+
+    //View
+    <string name="back">Back</string>
+    <string name="edit">Edit</string>
+    <string name="delete">Delete</string>
+    <string name="select_date">Select Date</string>
+    <string name="select_image">Select Image</string>
+    <string name="name_friend">Name</string>
+    <string name="email_friend">Email</string>
+    <string name="birthday_friend">Birthday</string>
+    <string name="image_Friend">Image (optional)</string>
+    <string name="confirm_change">Confirm Change</string>
+    <string name="title_meeting">Title</string>
+    <string name="location_meeting">Location</string>
+    <string name="date_meeting">Date</string>
+    <string name="start_time_meeting">Start Time</string>
+    <string name="end_time_meeting">End Time</string>
+    <string name="invite_list">Invite List</string>
+    <string name="select_location">Select Location</string>
+    <string name="select_start_time">Select Start Time</string>
+    <string name="select_end_time">Select End Time</string>
+    <string name="add_invite">Add Invite</string>
+    <string name="remove_invite">Remove Invite</string>
+
+    //Class-use
+    <string name="add_friend_message">Friend added</string>
+    <string name="incomplete_message">Incomplete field(s)</string>
+    <string name="id">id</string>
+    <string name="edit_friend_message">Friend edited</string>
+    <string name="start_time_edit">Start time edit</string>
+    <string name="end_time_edit">End time edit</string>
+    <string name="invalid_time">Invalid time input</string>
+    <string name="empty_invite">Invite list is empty</string>
+    <string name="edit_meeting_message">Meeting edited</string>
+    <string name="request_code">request code</string>
+    <string name="list">list</string>
+    <string name="find_friend">Find friend</string>
+    <string name="delete_friend_message">Friend deleted</string>
+    <string name="delete_meeting_message">Meeting deleted</string>
+    <string name="asc">ascending</string>
+    <string name="desc">descending</string>
+    <string name="title_list">title</string>
+    <string name="details_list">details</string>
+    <string name="start_time_new">Start time new</string>
+    <string name="end_time_new">End time new</string>
+    <string name="create_meeting_message">Meeting created</string>
+</resources>
