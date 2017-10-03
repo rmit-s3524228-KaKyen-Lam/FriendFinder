@@ -274,6 +274,7 @@ public class Database extends SQLiteOpenHelper {
                 Log.d("Check", dbStartTime[1]);
                 String endTime = cursor.getString(3);
                 String [] dbEndTime = endTime.split(" ");
+                
                 String friend = cursor.getString(4);
                 JSONArray jsonArray = new JSONArray();
                 try {
