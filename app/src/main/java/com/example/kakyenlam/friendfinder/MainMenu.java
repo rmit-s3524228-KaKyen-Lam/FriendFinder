@@ -19,6 +19,7 @@ public class MainMenu extends AppCompatActivity {
     Button scheduleMeetingButton;
     Button meetingListButton ;
     Button findFriendButton;
+    Button checkMapButton;
 
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -32,6 +33,7 @@ public class MainMenu extends AppCompatActivity {
         scheduleMeetingButton = (Button) findViewById(R.id.scheduleMeetingButton);
         meetingListButton = (Button) findViewById(R.id.meetingListButton);
         findFriendButton = (Button) findViewById(R.id.findFriendButton);
+        checkMapButton = (Button) findViewById(R.id.checkMapButton);
 
         //Activities after clicking the Buttons
         addFriendButton.setOnClickListener(new View.OnClickListener()
@@ -67,6 +69,13 @@ public class MainMenu extends AppCompatActivity {
             public void onClick(View v)
             {
                 findFriendActivity(v);
+            }
+        });
+        checkMapButton.setOnClickListener(new View.OnClickListener()
+        {
+            public void onClick(View v)
+            {
+                checkMapActivity(v);
             }
         });
     }
@@ -123,6 +132,17 @@ public class MainMenu extends AppCompatActivity {
     public void findFriendActivity(View view)
     {
         Intent myIntent = new Intent(this, FindFriend.class);
+        this.startActivityForResult(myIntent, 1);
+    }
+
+    /**
+     * Starts CheckMap activity
+     *
+     * @param view Listener View object
+     */
+    public void checkMapActivity(View view)
+    {
+        Intent myIntent = new Intent(this, MapsActivity.class);
         this.startActivityForResult(myIntent, 1);
     }
 
