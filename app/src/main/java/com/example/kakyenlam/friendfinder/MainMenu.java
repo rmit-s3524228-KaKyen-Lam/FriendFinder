@@ -142,8 +142,8 @@ public class MainMenu extends AppCompatActivity {
      */
     public void checkMapActivity(View view)
     {
-//        Intent myIntent = new Intent(this, MapsActivity.class);
-//        this.startActivityForResult(myIntent, 1);
+        Intent myIntent = new Intent(this, MapsActivity.class);
+        this.startActivityForResult(myIntent, 1);
     }
 
 }
