@@ -1,6 +1,11 @@
 package com.example.kakyenlam.friendfinder;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -9,7 +14,10 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -21,6 +29,8 @@ import controller.*;
 import static com.example.kakyenlam.friendfinder.SuggestMeeting.SUGGEST_MEETING;
 
 /*https://stackoverflow.com/questions/8452526/android-can-i-use-putextra-to-pass-multiple-values*/
+/*http://www.learn-android-easily.com/2013/05/android-alarm-manager_31.html*/
+/*https://stackoverflow.com/questions/8469705/how-to-set-multiple-alarms-using-android-alarm-manager*/
 
 /**
  * Handles the operation of adding Meeting object to the program
@@ -43,7 +53,7 @@ public class ScheduleMeeting extends AppCompatActivity {
     private Database db;
     int requestCode;
     Bundle prevBundle;
-    Bundle upcomingBundle;
+    SharedPreferences preferences;
 
     //View variables
     static TextView startTimeInput;
@@ -162,7 +172,7 @@ public class ScheduleMeeting extends AppCompatActivity {
                     Meeting newMeeting = new Meeting(meetingId, title, startTime, endTime, inviteList, location);
                     db.addMeeting(newMeeting);
                     ToastCreator.createToast(getApplicationContext(), getString(R.string.create_meeting_message));
-
+                    createAlarm(startTime);
                     finish();
                 }
             }
@@ -219,6 +229,40 @@ public class ScheduleMeeting extends AppCompatActivity {
         Intent myIntent = new Intent(this, LocationList.class);
         myIntent.putExtra(getString(R.string.request_code), SCHEDULE_MEETING);
         this.startActivityForResult(myIntent, 1);
+    }
+
+    public void createAlarm(Date time)
+    {
+        long milliWarning = 0;
+        preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        String alarmMin = preferences.getString("alarmWarningMin", " ");
+
+        SimpleDateFormat f = new SimpleDateFormat("mm");
+        try {
+            Date d = f.parse(alarmMin);
+            milliWarning = d.getTime();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        long milliMeeting= time.getTime();
+
+
+        Calendar c = Calendar.getInstance();
+        Date currentDate = c.getTime();
+        long milliCurrent = currentDate.getTime();
+
+        System.out.println (milliWarning);
+        System.out.println (milliMeeting);
+        System.out.println (milliCurrent);
+        long milliAlarm = milliMeeting - milliWarning;
+        Intent notifIntent= new Intent(this, NotificationService.class);
+        AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+        PendingIntent pendingIntent = PendingIntent.getService(this, 0, notifIntent, 0);
+
+        //set the alarm for particular time
+        alarmManager.set(AlarmManager.RTC_WAKEUP,milliAlarm, pendingIntent);
+
     }
 
 
