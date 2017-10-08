@@ -53,7 +53,7 @@ import static controller.DistanceMatrix.midpointCalc;
 /*https://stackoverflow.com/questions/7578236/how-to-send-hashmap-value-to-another-activity-using-an-intent*/
 
 
-public class MapsActivity2 extends FragmentActivity implements OnMapReadyCallback, LocationListener, GoogleMap.OnMyLocationButtonClickListener {
+public class SuggestMeetingMap extends FragmentActivity implements OnMapReadyCallback, LocationListener, GoogleMap.OnMyLocationButtonClickListener {
 
     private static final long switchTime = 2000;
     private GoogleMap mMap;
@@ -103,6 +103,8 @@ public class MapsActivity2 extends FragmentActivity implements OnMapReadyCallbac
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+
+        Toast.makeText(getApplicationContext(), "Select location button to start suggestion", Toast.LENGTH_LONG).show();
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
@@ -227,7 +229,7 @@ public class MapsActivity2 extends FragmentActivity implements OnMapReadyCallbac
     @Override
     public boolean onMyLocationButtonClick() {
         mMap.clear();
-        Toast.makeText(this, "Finding nearest friends...", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Calculating nearest distance...", Toast.LENGTH_SHORT).show();
 
         LatLng origin = new LatLng (getLocation().getLatitude(), getLocation().getLongitude());
         setMarker(origin, "Current", BitmapDescriptorFactory.HUE_RED);

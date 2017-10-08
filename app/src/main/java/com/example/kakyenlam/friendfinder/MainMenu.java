@@ -18,7 +18,6 @@ public class MainMenu extends AppCompatActivity {
     Button friendListButton;
     Button scheduleMeetingButton;
     Button meetingListButton ;
-    Button findFriendButton;
     Button checkMapButton;
 
     @Override
@@ -32,7 +31,6 @@ public class MainMenu extends AppCompatActivity {
         friendListButton = (Button) findViewById(R.id.friendListButton);
         scheduleMeetingButton = (Button) findViewById(R.id.scheduleMeetingButton);
         meetingListButton = (Button) findViewById(R.id.meetingListButton);
-        findFriendButton = (Button) findViewById(R.id.findFriendButton);
         checkMapButton = (Button) findViewById(R.id.checkMapButton);
 
         //Activities after clicking the Buttons
@@ -64,18 +62,11 @@ public class MainMenu extends AppCompatActivity {
                 meetingListActivity(v);
             }
         });
-        findFriendButton.setOnClickListener(new View.OnClickListener()
-        {
-            public void onClick(View v)
-            {
-                findFriendActivity(v);
-            }
-        });
         checkMapButton.setOnClickListener(new View.OnClickListener()
         {
             public void onClick(View v)
             {
-                checkMapActivity(v);
+                suggestMeetingMapActivity(v);
             }
         });
     }
@@ -136,13 +127,13 @@ public class MainMenu extends AppCompatActivity {
     }
 
     /**
-     * Starts CheckMap activity
+     * Starts SuggestMeetingMap activity
      *
      * @param view Listener View object
      */
-    public void checkMapActivity(View view)
+    public void suggestMeetingMapActivity(View view)
     {
-        Intent myIntent = new Intent(this, MapsActivity2.class);
+        Intent myIntent = new Intent(this, SuggestMeetingMap.class);
         this.startActivityForResult(myIntent, 1);
     }
 
