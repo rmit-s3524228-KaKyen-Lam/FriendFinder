@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +37,8 @@ import java.util.TimerTask;
 
 import controller.DistanceMatrix;
 import controller.TimeConverter;
+import model.Database;
+import model.Friend;
 
 import static controller.DistanceMatrix.getUrl;
 import static controller.DistanceMatrix.midpointCalc;
@@ -52,6 +55,7 @@ import static controller.DistanceMatrix.midpointCalc;
 
 public class MapsActivity2 extends FragmentActivity implements OnMapReadyCallback, LocationListener, GoogleMap.OnMyLocationButtonClickListener {
 
+    private static final long switchTime = 2000;
     private GoogleMap mMap;
     private int currlatitude;
     private int currlongitude;
@@ -64,17 +68,16 @@ public class MapsActivity2 extends FragmentActivity implements OnMapReadyCallbac
     ArrayList <Double> distanceList = new ArrayList<>();
     private HashMap<String,Double> distanceTotalMap = new HashMap<>();
     LinkedHashMap <String, Double> sortedDistanceMap = new LinkedHashMap<>();
-    private static long switchTime = 2000;
+    Database db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps2);
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+
+        db = new Database (this);
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        // Define the criteria how to select the locatioin provider -> use
-        // default
         Criteria criteria = new Criteria();
         provider = locationManager.getBestProvider(criteria, false);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -152,73 +155,79 @@ public class MapsActivity2 extends FragmentActivity implements OnMapReadyCallbac
         DummyLocationService dls = DummyLocationService.getSingletonInstance(this);
         Date selectedTime = TimeConverter.stringToTimeConverter("09:45");
         List<DummyLocationService.FriendLocation> extractedList = dls.getFriendLocationsForTime(selectedTime, MINUTE_RANGE, SECOND_RANGE);
+        List<Friend> friendList= db.getAllFriends();
+        HashSet<String> currentFriendsNames = new HashSet<>();
+
+        for (Friend f: friendList) {
+            currentFriendsNames.add(f.getName().toLowerCase());
+        }
 
         for (DummyLocationService.FriendLocation friend : extractedList) {
-            nameList.add(friend.name);
 
-            System.out.println(friend.name);
+            if (currentFriendsNames.contains(friend.name)) {
+                nameList.add(friend.name);
+                System.out.println(friend.name);
 
-            LatLng dest = new LatLng(friend.latitude, friend.longitude);
-            setMarker(dest, "Friend ", BitmapDescriptorFactory.HUE_BLUE);
+                LatLng dest = new LatLng(friend.latitude, friend.longitude);
+                setMarker(dest, "Friend ", BitmapDescriptorFactory.HUE_BLUE);
 
-            LatLng midpoint = midpointCalc(origin, dest);
-            // Getting URL to the Google Directions API
-            DistanceMatrix.FetchUrl FetchOrigin = new DistanceMatrix.FetchUrl(new DistanceMatrix.myInterface() {
-                @Override
-                public void myMethod(String result) {
-                    String distance = DistanceMatrix.jsonParser(result);
-                    distanceSum[0] = Double.parseDouble(distance);
-                }
-            });
-            DistanceMatrix.FetchUrl FetchDest = new DistanceMatrix.FetchUrl(new DistanceMatrix.myInterface() {
-                @Override
-                public void myMethod(String result) {
-                    String distance = DistanceMatrix.jsonParser(result);
-                    distanceSum[1] = Double.parseDouble(distance);
-                    distanceList.add(distanceSum[0] + distanceSum[1]);
+                LatLng midpoint = midpointCalc(origin, dest);
+                // Getting URL to the Google Directions API
+                DistanceMatrix.FetchUrl FetchOrigin = new DistanceMatrix.FetchUrl(new DistanceMatrix.myInterface() {
+                    @Override
+                    public void myMethod(String result) {
+                        String distance = DistanceMatrix.jsonParser(result);
+                        distanceSum[0] = Double.parseDouble(distance);
+                    }
+                });
+                DistanceMatrix.FetchUrl FetchDest = new DistanceMatrix.FetchUrl(new DistanceMatrix.myInterface() {
+                    @Override
+                    public void myMethod(String result) {
+                        String distance = DistanceMatrix.jsonParser(result);
+                        distanceSum[1] = Double.parseDouble(distance);
+                        distanceList.add(distanceSum[0] + distanceSum[1]);
 
-                    if (distanceList.size() == nameList.size())
-                    {
-                        for (int i = 0; i < nameList.size(); i++) {
-                            System.out.println(nameList.get(i) + ": " + distanceList.get(i));
-                            distanceTotalMap.put(nameList.get(i), distanceList.get(i));
-                        }
-
-                        sortedDistanceMap = sortDistance(distanceTotalMap);
-                        for (String name: sortedDistanceMap.keySet()) {
-                            System.out.println(name + ": " + sortedDistanceMap.get(name));
-                        }
-
-                        Timer timer = new Timer();
-                        timer.schedule(new TimerTask() {
-
-                            public void run() {
-
-                                sendToSuggestMeeting(sortedDistanceMap);
-
+                        if (distanceList.size() == nameList.size()) {
+                            for (int i = 0; i < nameList.size(); i++) {
+                                System.out.println(nameList.get(i) + ": " + distanceList.get(i));
+                                distanceTotalMap.put(nameList.get(i), distanceList.get(i));
                             }
 
-                        }, switchTime);
+                            sortedDistanceMap = sortDistance(distanceTotalMap);
+                            for (String name : sortedDistanceMap.keySet()) {
+                                System.out.println(name + ": " + sortedDistanceMap.get(name));
+                            }
+
+                            Timer timer = new Timer();
+                            timer.schedule(new TimerTask() {
+
+                                public void run() {
+
+                                    sendToSuggestMeeting(sortedDistanceMap);
+
+                                }
+
+                            }, switchTime);
+                        }
                     }
-                }
-            });
+                });
 
-            String originCheck = getUrl(origin, midpoint);
-            String destCheck = getUrl(dest, midpoint);
-
+                String originCheck = getUrl(origin, midpoint);
+                String destCheck = getUrl(dest, midpoint);
 
 
-            // Start downloading json data from Google Directions API
+                // Start downloading json data from Google Directions API
 
-            FetchOrigin.execute(originCheck);
-            FetchDest.execute(destCheck);
+                FetchOrigin.execute(originCheck);
+                FetchDest.execute(destCheck);
+            }
         }
     }
 
     @Override
     public boolean onMyLocationButtonClick() {
         mMap.clear();
-        Toast.makeText(this, "MyLocation button clicked", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Finding nearest friends...", Toast.LENGTH_SHORT).show();
 
         LatLng origin = new LatLng (getLocation().getLatitude(), getLocation().getLongitude());
         setMarker(origin, "Current", BitmapDescriptorFactory.HUE_RED);
