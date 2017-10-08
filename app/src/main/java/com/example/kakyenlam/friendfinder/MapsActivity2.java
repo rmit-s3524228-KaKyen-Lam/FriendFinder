@@ -2,15 +2,15 @@ package com.example.kakyenlam.friendfinder;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
-import android.os.AsyncTask;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
-import android.util.Log;
+import android.view.View;
 import android.widget.Toast;
 
 import com.google.android.gms.location.LocationListener;
@@ -22,26 +22,48 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
+
+import controller.DistanceMatrix;
+import controller.TimeConverter;
+
+import static controller.DistanceMatrix.getUrl;
+import static controller.DistanceMatrix.midpointCalc;
+
+/*http://www.vogella.com/tutorials/AndroidLocationAPI/article.html*/
+/*https://stackoverflow.com/questions/25360231/parse-json-array-from-google-maps-api-in-java*/
+/*https://stackoverflow.com/questions/14898768/how-to-access-nested-elements-of-json-object-using-getjsonarray-method*/
+/*https://www.androidtutorialpoint.com/intermediate/google-maps-draw-path-two-points-using-google-directions-google-map-android-api-v2/*/
+/*http://www.c-sharpcorner.com/UploadFile/1e5156/learn-how-to-find-current-location-using-location-manager-in/*/
+/*https://stackoverflow.com/questions/4068984/running-multiple-asynctasks-at-the-same-time-not-possible/13800208#13800208*/
+/*https://stackoverflow.com/questions/5485705/how-to-call-another-activity-after-certain-time-limit*/
+/*https://stackoverflow.com/questions/7578236/how-to-send-hashmap-value-to-another-activity-using-an-intent*/
 
 
 public class MapsActivity2 extends FragmentActivity implements OnMapReadyCallback, LocationListener, GoogleMap.OnMyLocationButtonClickListener {
 
     private GoogleMap mMap;
-    private int latitude;
-    private int longitude;
+    private int currlatitude;
+    private int currlongitude;
     private LocationManager locationManager;
     private String provider;
+    private static final int MINUTE_RANGE = 10;
+    private static final int SECOND_RANGE = 30;
+    private ArrayList<String> friendLocationList = new ArrayList<>();
+    ArrayList <String> nameList = new ArrayList<>();
+    ArrayList <Double> distanceList = new ArrayList<>();
+    private HashMap<String,Double> distanceTotalMap = new HashMap<>();
+    HashMap <String, Double> sortedDistanceMap = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,8 +80,6 @@ public class MapsActivity2 extends FragmentActivity implements OnMapReadyCallbac
 
             return;
         }
-
-
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -89,44 +109,131 @@ public class MapsActivity2 extends FragmentActivity implements OnMapReadyCallbac
         mMap.setOnMyLocationButtonClickListener(this);
 
         // Add a marker in Sydney and move the camera
-        LatLng sydney = new LatLng(-34, 151);
-        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        // Define the criteria how to select the locatioin provider -> use
+        // default
+        Criteria criteria = new Criteria();
+        provider = locationManager.getBestProvider(criteria, false);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+
+            return;
+        }
+        Location location = locationManager.getLastKnownLocation(provider);
+
+        // Initialize the location fields
+        if (location != null) {
+            System.out.println("Provider " + provider + " has been selected.");
+            onLocationChanged(location);
+        }
+
+        if (location != null) {
+            LatLng initial = new LatLng(location.getLatitude(), location.getLongitude());
+            float zoomLevel = (float) 15; //This goes up to 21
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(initial, zoomLevel));
+        }
+
+
+
+    }
+
+    public void setMarker(LatLng location, String title, float v) {
+        MarkerOptions mark = new MarkerOptions();
+        mark.position(location);
+        mark.title(title);
+        mark.icon(BitmapDescriptorFactory.defaultMarker(v));
+        mMap.addMarker(mark);
+    }
+
+    double[] distanceSum =  new double[2];
+
+    public void getFriendLocation(LatLng origin) {
+
+        DummyLocationService dls = DummyLocationService.getSingletonInstance(this);
+        Date selectedTime = TimeConverter.stringToTimeConverter("09:45");
+        List<DummyLocationService.FriendLocation> extractedList = dls.getFriendLocationsForTime(selectedTime, MINUTE_RANGE, SECOND_RANGE);
+
+        for (DummyLocationService.FriendLocation friend : extractedList) {
+            nameList.add(friend.name);
+
+            System.out.println(friend.name);
+
+            LatLng dest = new LatLng(friend.latitude, friend.longitude);
+            setMarker(dest, "Friend ", BitmapDescriptorFactory.HUE_BLUE);
+
+            LatLng midpoint = midpointCalc(origin, dest);
+            // Getting URL to the Google Directions API
+            DistanceMatrix.FetchUrl FetchOrigin = new DistanceMatrix.FetchUrl(new DistanceMatrix.myInterface() {
+                @Override
+                public void myMethod(String result) {
+                    String distance = DistanceMatrix.jsonParser(result);
+                    distanceSum[0] = Double.parseDouble(distance);
+                }
+            });
+            DistanceMatrix.FetchUrl FetchDest = new DistanceMatrix.FetchUrl(new DistanceMatrix.myInterface() {
+                @Override
+                public void myMethod(String result) {
+                    String distance = DistanceMatrix.jsonParser(result);
+                    distanceSum[1] = Double.parseDouble(distance);
+                    distanceList.add(distanceSum[0] + distanceSum[1]);
+
+                    if (distanceList.size() == nameList.size())
+                    {
+                        for (int i = 0; i < nameList.size(); i++) {
+                            System.out.println(nameList.get(i) + ": " + distanceList.get(i));
+                            distanceTotalMap.put(nameList.get(i), distanceList.get(i));
+                        }
+
+                        sortedDistanceMap = sortDistance(distanceTotalMap);
+                        for (String name: sortedDistanceMap.keySet()) {
+                            System.out.println(name + ": " + sortedDistanceMap.get(name));
+                        }
+
+                        Timer timer = new Timer();
+                        timer.schedule(new TimerTask() {
+
+                            public void run() {
+
+                                sendToSuggestMeeting(sortedDistanceMap);
+
+                            }
+
+                        }, 10000);
+                    }
+                }
+            });
+
+            String originCheck = getUrl(origin, midpoint);
+            String destCheck = getUrl(dest, midpoint);
+
+
+
+            // Start downloading json data from Google Directions API
+
+            FetchOrigin.execute(originCheck);
+            FetchDest.execute(destCheck);
+        }
     }
 
     @Override
     public boolean onMyLocationButtonClick() {
-
+        mMap.clear();
         Toast.makeText(this, "MyLocation button clicked", Toast.LENGTH_SHORT).show();
 
         LatLng origin = new LatLng (getLocation().getLatitude(), getLocation().getLongitude());
+        setMarker(origin, "Current", BitmapDescriptorFactory.HUE_RED);
 
-        MarkerOptions originMark = new MarkerOptions();
-        originMark.position(origin);
-        originMark.title("Current Position");
-        originMark.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
-        mMap.addMarker(originMark);
-        mMap.animateCamera(CameraUpdateFactory.zoomTo(10));
+//        LatLng dest = new LatLng(-37.809837, 144.965215);
 
-        LatLng dest = new LatLng(-37.809837, 144.965215);
-        // Getting URL to the Google Directions API
-        String url = getUrl(origin, dest);
-        Log.d("onMapClick", url.toString());
-        FetchUrl FetchUrl = new FetchUrl();
+        getFriendLocation(origin);
 
 
 
-        MarkerOptions destMark = new MarkerOptions();
-        destMark.position(dest);
-        destMark.title("Target Position");
-        destMark.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
+//        LatLng midpoint = midpointCalc(origin, dest);
+//        setMarker(midpoint, "Midpoint", BitmapDescriptorFactory.HUE_GREEN);
+//        float zoomLevel = (float) 15; //This goes up to 21
+//        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(midpoint, zoomLevel));
 
 
-        mMap.addMarker(destMark);
-
-
-        // Start downloading json data from Google Directions API
-        FetchUrl.execute(url);
         // Return false so that we don't consume the event and the default behavior still occurs
         // (the camera animates to the user's current position).
         return false;
@@ -134,8 +241,8 @@ public class MapsActivity2 extends FragmentActivity implements OnMapReadyCallbac
 
     @Override
     public void onLocationChanged(Location location) {
-        latitude = (int) (location.getLatitude());
-        longitude = (int) (location.getLongitude());
+        currlatitude = (int) (location.getLatitude());
+        currlongitude = (int) (location.getLongitude());
     }
 
     public Location getLocation() {
@@ -157,114 +264,39 @@ public class MapsActivity2 extends FragmentActivity implements OnMapReadyCallbac
         return location;
     }
 
+    public HashMap<String, Double> sortDistance(HashMap<String, Double> distanceMap) {
 
 
+        Set<Map.Entry<String, Double>> distanceMapEntrySet = distanceMap.entrySet();
+        List<Map.Entry<String, Double>> entryList = new ArrayList<>(distanceMapEntrySet);
 
-    private String getUrl(LatLng origin, LatLng dest) {
+            Collections.sort(entryList, new Comparator<Map.Entry<String, Double>>() {
 
-        // Origin of route
-        String str_origin = "origins=" + origin.latitude + "," + origin.longitude;
-
-        // Destination of route
-        String str_dest = "destinations=" + dest.latitude + "," + dest.longitude;
-
-
-        // Sensor enabled
-        String mode = "mode=walking";
-        String apiKey = "key=AIzaSyCazZbc7CQAL2aIaXYBndwTRZrsZ58pqPw";
-
-        // Building the parameters to the web service
-        String parameters = str_origin + "&" + str_dest + "&" + mode + "&" + apiKey;
-
-        // Output format
-        String output = "json";
-
-        // Building the url to the web service
-        String url = "https://maps.googleapis.com/maps/api/distancematrix/" + output + "?" + parameters;
+                @Override
+                public int compare(Map.Entry<String, Double> o1, Map.Entry<String, Double> o2) {
+                    return o1.getValue().compareTo(o2.getValue());
+                }
+            });
 
 
-        return url;
+        LinkedHashMap<String, Double> sortedHashMap = new LinkedHashMap<>();
+
+        for (Map.Entry<String, Double> entry : entryList) {
+            sortedHashMap.put(entry.getKey(), entry.getValue());
+        }
+
+        return sortedHashMap;
     }
 
-    String result = "";
-// Fetches data from url passed
-private class FetchUrl extends AsyncTask<String, Void, String> {
 
-    @Override
-    protected String doInBackground(String... url) {
-
-        // For storing data from web service
-        String data = "";
-
-        try {
-            // Fetching the data from web service
-            data = downloadUrl(url[0]);
-            Log.d("Background Task data", data.toString());
-        } catch (Exception e) {
-            Log.d("Background Task", e.toString());
-        }
-        System.out.println(data);
-        return data;
-    }
-
-    @Override
-    protected void onPostExecute(String result) {
-        //parse JSON data
-        JSONObject obj = null;
-        ArrayList<String> list = new ArrayList<String>();
-        try {
-            obj = new JSONObject(result);
-            JSONArray rows = obj.getJSONArray("rows");
-            JSONArray elements = rows.getJSONObject(0).getJSONArray("elements");
-            JSONObject distance = elements.getJSONObject(0).getJSONObject("distance");
-            String displayText = distance.getString("text");
-            String displayValue = distance.getString("value");
-
-            System.out.println(displayText + ", " + displayValue);
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-    } // protected void onPostExecute(Void v)
-
-}
-
-    private String downloadUrl(String strUrl) throws IOException {
-        String data = "";
-        InputStream iStream = null;
-        HttpURLConnection urlConnection = null;
-        try {
-            URL url = new URL(strUrl);
-
-            // Creating an http connection to communicate with url
-            urlConnection = (HttpURLConnection) url.openConnection();
-
-            // Connecting to url
-            urlConnection.connect();
-
-            // Reading data from url
-            iStream = urlConnection.getInputStream();
-
-            BufferedReader br = new BufferedReader(new InputStreamReader(iStream));
-
-            StringBuffer sb = new StringBuffer();
-
-            String line = "";
-            while ((line = br.readLine()) != null) {
-                sb.append(line);
-            }
-
-            data = sb.toString();
-            Log.d("downloadUrl", data.toString());
-            br.close();
-
-        } catch (Exception e) {
-            Log.d("Exception", e.toString());
-        } finally {
-            iStream.close();
-            urlConnection.disconnect();
-        }
-        return data;
+    /**
+     * Send details of selected Friend object to FriendDetails class
+     *
+     * @param sortedDistanceMap id selected from list
+     */
+    public void sendToSuggestMeeting(HashMap <String,Double> sortedDistanceMap) {
+        Intent suggestMeetingIntent = new Intent(this, SuggestMeeting.class);
+        suggestMeetingIntent.putExtra("sortedDistanceMap", sortedDistanceMap);
+        this.startActivityForResult(suggestMeetingIntent, 1);
     }
 }

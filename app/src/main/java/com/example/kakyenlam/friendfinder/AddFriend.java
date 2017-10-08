@@ -96,6 +96,9 @@ public class AddFriend extends AppCompatActivity {
                     ToastCreator.createToast(getApplicationContext(), getString(R.string.incomplete_message));
                 } else {
                     id = IDGenerator.idGen();
+                    if (photoUri == null) {
+                        photoUri = Uri.parse("none");
+                    }
                     Friend newFriend = new Friend(id, name, email, birthday, photoUri);
                     db.addFriend(newFriend);
                     ToastCreator.createToast(getApplicationContext(), getString(R.string.add_friend_message));

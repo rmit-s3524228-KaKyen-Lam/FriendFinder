@@ -61,7 +61,7 @@
         android:textAppearance="@style/TextAppearance.AppCompat.Body1"
         android:layout_marginLeft="16dp"
         app:layout_constraintLeft_toLeftOf="parent"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="32dp"
         app:layout_constraintTop_toBottomOf="@+id/locationFindButton" />
 
     <Button
@@ -77,7 +77,7 @@
     <ListView
         android:id="@+id/friendLocationListView"
         android:layout_width="350dp"
-        android:layout_height="200dp"
+        android:layout_height="100dp"
         android:layout_marginLeft="0dp"
         android:layout_marginRight="0dp"
         android:layout_marginTop="-1dp"
@@ -95,4 +95,25 @@
         android:text="Find Friend"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/timeFindInput" />
+
+    <TextView
+        android:id="@+id/totalTimeDisplay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Total Time"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+        android:layout_marginTop="17dp"
+        app:layout_constraintTop_toBottomOf="@+id/timeSelectFindButton"
+        app:layout_constraintLeft_toRightOf="@+id/locationFindButton"
+        android:layout_marginLeft="56dp" />
+
+    <TextView
+        android:id="@+id/totalTimeInput"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="0dp"
+        android:layout_marginTop="0dp"
+        android:text="time"
+        app:layout_constraintLeft_toLeftOf="@+id/totalTimeDisplay"
+        app:layout_constraintTop_toBottomOf="@+id/totalTimeDisplay" />
 </android.support.constraint.ConstraintLayout>

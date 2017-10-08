@@ -34,10 +34,15 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import controller.TimeConverter;
 
 /*http://www.vogella.com/tutorials/AndroidLocationAPI/article.html*/
 /*https://stackoverflow.com/questions/25360231/parse-json-array-from-google-maps-api-in-java*/
 /*https://stackoverflow.com/questions/14898768/how-to-access-nested-elements-of-json-object-using-getjsonarray-method*/
+/*https://www.androidtutorialpoint.com/intermediate/google-maps-draw-path-two-points-using-google-directions-google-map-android-api-v2/*/
 /*http://www.c-sharpcorner.com/UploadFile/1e5156/learn-how-to-find-current-location-using-location-manager-in/*/
 
 public class MapsActivity extends FragmentActivity implements OnMyLocationButtonClickListener,
@@ -48,6 +53,9 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
     private double latitude;
     private double longitude;
     private LatLng origin;
+    private static final int MINUTE_RANGE = 1;
+    private static final int SECOND_RANGE = 30;
+    private ArrayList<String> friendLocationList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -149,6 +157,8 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         // (the camera animates to the user's current position).
         return false;
     }
+
+
 
     private String getUrl(LatLng origin, LatLng dest) {
 
