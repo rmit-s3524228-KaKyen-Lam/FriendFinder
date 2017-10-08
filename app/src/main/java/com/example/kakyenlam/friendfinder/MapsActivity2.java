@@ -63,7 +63,8 @@ public class MapsActivity2 extends FragmentActivity implements OnMapReadyCallbac
     ArrayList <String> nameList = new ArrayList<>();
     ArrayList <Double> distanceList = new ArrayList<>();
     private HashMap<String,Double> distanceTotalMap = new HashMap<>();
-    HashMap <String, Double> sortedDistanceMap = new HashMap<>();
+    LinkedHashMap <String, Double> sortedDistanceMap = new LinkedHashMap<>();
+    private static long switchTime = 2000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -197,7 +198,7 @@ public class MapsActivity2 extends FragmentActivity implements OnMapReadyCallbac
 
                             }
 
-                        }, 10000);
+                        }, switchTime);
                     }
                 }
             });
@@ -264,7 +265,7 @@ public class MapsActivity2 extends FragmentActivity implements OnMapReadyCallbac
         return location;
     }
 
-    public HashMap<String, Double> sortDistance(HashMap<String, Double> distanceMap) {
+    public LinkedHashMap<String, Double> sortDistance(HashMap<String, Double> distanceMap) {
 
 
         Set<Map.Entry<String, Double>> distanceMapEntrySet = distanceMap.entrySet();

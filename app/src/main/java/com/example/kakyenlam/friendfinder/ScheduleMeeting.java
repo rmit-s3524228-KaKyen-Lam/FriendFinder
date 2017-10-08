@@ -18,6 +18,8 @@ import model.Database;
 import model.Meeting;
 import controller.*;
 
+import static com.example.kakyenlam.friendfinder.SuggestMeeting.SUGGEST_MEETING;
+
 /*https://stackoverflow.com/questions/8452526/android-can-i-use-putextra-to-pass-multiple-values*/
 
 /**
@@ -39,6 +41,8 @@ public class ScheduleMeeting extends AppCompatActivity {
     int month;
     int day;
     private Database db;
+    int requestCode;
+    Bundle prevBundle;
 
     //View variables
     static TextView startTimeInput;
@@ -90,6 +94,19 @@ public class ScheduleMeeting extends AppCompatActivity {
                 .append(" "));
 
         db = new Database (this);
+
+        //Get data from previous Intent
+        Intent prevIntent = getIntent();
+        prevBundle = prevIntent.getExtras();
+        requestCode = 0;
+        if (prevBundle != null) {
+            requestCode = (int) prevBundle.get(getString(R.string.request_code));
+        }
+
+        if (requestCode == SUGGEST_MEETING) {
+            String name = (String) prevBundle.get(getString(R.string.name));
+            inviteList.add(name);
+        }
 
         //Activities after clicking Buttons
         locationButton.setOnClickListener(new View.OnClickListener() {
