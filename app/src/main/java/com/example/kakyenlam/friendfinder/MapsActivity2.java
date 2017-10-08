@@ -1,27 +1,26 @@
 package com.example.kakyenlam.friendfinder;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.pm.PackageManager;
+import android.location.Criteria;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.AsyncTask;
-import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
+import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.GoogleMap.OnMyLocationButtonClickListener;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -35,32 +34,32 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 
-/*http://www.vogella.com/tutorials/AndroidLocationAPI/article.html*/
-/*https://stackoverflow.com/questions/25360231/parse-json-array-from-google-maps-api-in-java*/
-/*https://stackoverflow.com/questions/14898768/how-to-access-nested-elements-of-json-object-using-getjsonarray-method*/
-/*http://www.c-sharpcorner.com/UploadFile/1e5156/learn-how-to-find-current-location-using-location-manager-in/*/
 
-public class MapsActivity extends FragmentActivity implements OnMyLocationButtonClickListener,
-        OnMapReadyCallback {
+public class MapsActivity2 extends FragmentActivity implements OnMapReadyCallback, LocationListener, GoogleMap.OnMyLocationButtonClickListener {
 
     private GoogleMap mMap;
-    private FusedLocationProviderClient mFusedLocationClient;
-    private double latitude;
-    private double longitude;
-    private LatLng origin;
+    private int latitude;
+    private int longitude;
+    private LocationManager locationManager;
+    private String provider;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_maps);
+        setContentView(R.layout.activity_maps2);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
 
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        // Define the criteria how to select the locatioin provider -> use
+        // default
+        Criteria criteria = new Criteria();
+        provider = locationManager.getBestProvider(criteria, false);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
             return;
         }
+
+
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -80,53 +79,36 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
             return;
         }
 
-
-
         mMap.setMyLocationEnabled(true);
         mMap.setOnMyLocationButtonClickListener(this);
 
-
+        // Add a marker in Sydney and move the camera
+        LatLng sydney = new LatLng(-34, 151);
+        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
     }
-
 
     @Override
     public boolean onMyLocationButtonClick() {
 
         Toast.makeText(this, "MyLocation button clicked", Toast.LENGTH_SHORT).show();
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
-        }
-
-        // Got last known location. In some rare situations this can be null.
-//                        if (location != null) {
-//                            latitude = location.getLatitude();
-//                            longitude = location.getLongitude();
-//                            origin = new LatLng(latitude, longitude);
-//                            System.out.println(origin);
-//                            float zoomLevel = (float) 15; //This goes up to 21
-//                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(origin, zoomLevel));
-
-//    }
-
-        // Add a marker in Melbourne and move the camera
-//        origin = new LatLng (-37.818288, 144.967040);
-        LatLng dest = new LatLng(-37.809837, 144.965215);
+        LatLng origin = new LatLng (getLocation().getLatitude(), getLocation().getLongitude());
 
         MarkerOptions originMark = new MarkerOptions();
         originMark.position(origin);
         originMark.title("Current Position");
         originMark.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
         mMap.addMarker(originMark);
-        float zoomLevel = (float) 15; //This goes up to 21
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(origin, zoomLevel));
+        mMap.animateCamera(CameraUpdateFactory.zoomTo(10));
 
-
+        LatLng dest = new LatLng(-37.809837, 144.965215);
         // Getting URL to the Google Directions API
         String url = getUrl(origin, dest);
         Log.d("onMapClick", url.toString());
@@ -149,6 +131,34 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         // (the camera animates to the user's current position).
         return false;
     }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        latitude = (int) (location.getLatitude());
+        longitude = (int) (location.getLongitude());
+    }
+
+    public Location getLocation() {
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+
+            return null;
+        }
+        Location location = locationManager.getLastKnownLocation(provider);
+
+        // Initialize the location fields
+        if (location != null) {
+            System.out.println("Provider " + provider + " has been selected.");
+            onLocationChanged(location);
+            System.out.println (location);
+        } else {
+            System.out.println ("Location unavailable");
+        }
+        return location;
+    }
+
+
+
 
     private String getUrl(LatLng origin, LatLng dest) {
 
@@ -177,48 +187,48 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
     }
 
     String result = "";
-    // Fetches data from url passed
-    private class FetchUrl extends AsyncTask<String, Void, String> {
+// Fetches data from url passed
+private class FetchUrl extends AsyncTask<String, Void, String> {
 
-        @Override
-        protected String doInBackground(String... url) {
+    @Override
+    protected String doInBackground(String... url) {
 
-            // For storing data from web service
-            String data = "";
+        // For storing data from web service
+        String data = "";
 
-            try {
-                // Fetching the data from web service
-                data = downloadUrl(url[0]);
-                Log.d("Background Task data", data.toString());
-            } catch (Exception e) {
-                Log.d("Background Task", e.toString());
-            }
-            System.out.println(data);
-            return data;
+        try {
+            // Fetching the data from web service
+            data = downloadUrl(url[0]);
+            Log.d("Background Task data", data.toString());
+        } catch (Exception e) {
+            Log.d("Background Task", e.toString());
+        }
+        System.out.println(data);
+        return data;
+    }
+
+    @Override
+    protected void onPostExecute(String result) {
+        //parse JSON data
+        JSONObject obj = null;
+        ArrayList<String> list = new ArrayList<String>();
+        try {
+            obj = new JSONObject(result);
+            JSONArray rows = obj.getJSONArray("rows");
+            JSONArray elements = rows.getJSONObject(0).getJSONArray("elements");
+            JSONObject distance = elements.getJSONObject(0).getJSONObject("distance");
+            String displayText = distance.getString("text");
+            String displayValue = distance.getString("value");
+
+            System.out.println(displayText + ", " + displayValue);
+
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
 
-        @Override
-        protected void onPostExecute(String result) {
-            //parse JSON data
-            JSONObject obj = null;
-            ArrayList<String> list = new ArrayList<String>();
-            try {
-                obj = new JSONObject(result);
-                JSONArray rows = obj.getJSONArray("rows");
-                JSONArray elements = rows.getJSONObject(0).getJSONArray("elements");
-                JSONObject distance = elements.getJSONObject(0).getJSONObject("distance");
-                String displayText = distance.getString("text");
-                String displayValue = distance.getString("value");
+    } // protected void onPostExecute(Void v)
 
-                System.out.println(displayText + ", " + displayValue);
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-
-        } // protected void onPostExecute(Void v)
-
-    }
+}
 
     private String downloadUrl(String strUrl) throws IOException {
         String data = "";
@@ -257,6 +267,4 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         }
         return data;
     }
-
-
 }
