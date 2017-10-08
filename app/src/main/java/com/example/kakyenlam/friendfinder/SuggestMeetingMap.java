@@ -22,7 +22,9 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -155,7 +157,12 @@ public class SuggestMeetingMap extends FragmentActivity implements OnMapReadyCal
     public void getFriendLocation(LatLng origin) {
 
         DummyLocationService dls = DummyLocationService.getSingletonInstance(this);
-        Date selectedTime = TimeConverter.stringToTimeConverter("09:45");
+        Calendar c = Calendar.getInstance();
+        SimpleDateFormat df = new SimpleDateFormat("HH:mm");
+        String formattedDate = df.format(c.getTime());
+// Now formattedDate have current date/time
+        Toast.makeText(this, formattedDate, Toast.LENGTH_SHORT).show();
+        Date selectedTime = TimeConverter.stringToTimeConverter(formattedDate);
         List<DummyLocationService.FriendLocation> extractedList = dls.getFriendLocationsForTime(selectedTime, MINUTE_RANGE, SECOND_RANGE);
         List<Friend> friendList= db.getAllFriends();
         HashSet<String> currentFriendsNames = new HashSet<>();
@@ -239,15 +246,6 @@ public class SuggestMeetingMap extends FragmentActivity implements OnMapReadyCal
         getFriendLocation(origin);
 
 
-
-//        LatLng midpoint = midpointCalc(origin, dest);
-//        setMarker(midpoint, "Midpoint", BitmapDescriptorFactory.HUE_GREEN);
-//        float zoomLevel = (float) 15; //This goes up to 21
-//        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(midpoint, zoomLevel));
-
-
-        // Return false so that we don't consume the event and the default behavior still occurs
-        // (the camera animates to the user's current position).
         return false;
     }
 

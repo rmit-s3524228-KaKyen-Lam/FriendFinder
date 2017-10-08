@@ -19,6 +19,7 @@ public class MainMenu extends AppCompatActivity {
     Button scheduleMeetingButton;
     Button meetingListButton ;
     Button checkMapButton;
+    Button userSettingsButton;
 
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -32,6 +33,7 @@ public class MainMenu extends AppCompatActivity {
         scheduleMeetingButton = (Button) findViewById(R.id.scheduleMeetingButton);
         meetingListButton = (Button) findViewById(R.id.meetingListButton);
         checkMapButton = (Button) findViewById(R.id.checkMapButton);
+        userSettingsButton = (Button) findViewById(R.id.userSettingsButton);
 
         //Activities after clicking the Buttons
         addFriendButton.setOnClickListener(new View.OnClickListener()
@@ -67,6 +69,13 @@ public class MainMenu extends AppCompatActivity {
             public void onClick(View v)
             {
                 suggestMeetingMapActivity(v);
+            }
+        });
+        userSettingsButton.setOnClickListener(new View.OnClickListener()
+        {
+            public void onClick(View v)
+            {
+                userSettingsActivity(v);
             }
         });
     }
@@ -134,6 +143,17 @@ public class MainMenu extends AppCompatActivity {
     public void suggestMeetingMapActivity(View view)
     {
         Intent myIntent = new Intent(this, SuggestMeetingMap.class);
+        this.startActivityForResult(myIntent, 1);
+    }
+
+    /**
+     * Starts UserSettings activity
+     *
+     * @param view Listener View object
+     */
+    public void userSettingsActivity(View view)
+    {
+        Intent myIntent = new Intent(this, UserSettings.class);
         this.startActivityForResult(myIntent, 1);
     }
 

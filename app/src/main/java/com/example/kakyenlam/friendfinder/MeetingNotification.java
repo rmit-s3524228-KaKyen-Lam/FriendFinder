@@ -45,9 +45,6 @@ public class MeetingNotification {
                               final String exampleString, final int number) {
         final Resources res = context.getResources();
 
-        // This image is used as the notification's large icon (thumbnail).
-        // TODO: Remove this if your notification has no relevant thumbnail.
-        final Bitmap picture = BitmapFactory.decodeResource(res, R.drawable.example_picture);
 
 
         final String ticker = exampleString;
@@ -74,9 +71,6 @@ public class MeetingNotification {
                 // 4.1 or later)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
 
-                // Provide a large icon, shown with the notification in the
-                // notification drawer on devices running Android 3.0 or later.
-                .setLargeIcon(picture)
 
                 // Set ticker text (preview) information for this notification.
                 .setTicker(ticker)

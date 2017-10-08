@@ -60,6 +60,13 @@
                 <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
             </intent-filter>
         </receiver>
+
+        <service
+            android:name=".UpcomingMeetingService"
+            android:enabled="true"
+            android:exported="true" />
+
+        <activity android:name=".UserSettings"></activity>
     </application>
 
 </manifest>

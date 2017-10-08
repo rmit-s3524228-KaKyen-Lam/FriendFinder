@@ -43,6 +43,7 @@ public class ScheduleMeeting extends AppCompatActivity {
     private Database db;
     int requestCode;
     Bundle prevBundle;
+    Bundle upcomingBundle;
 
     //View variables
     static TextView startTimeInput;
@@ -161,6 +162,7 @@ public class ScheduleMeeting extends AppCompatActivity {
                     Meeting newMeeting = new Meeting(meetingId, title, startTime, endTime, inviteList, location);
                     db.addMeeting(newMeeting);
                     ToastCreator.createToast(getApplicationContext(), getString(R.string.create_meeting_message));
+
                     finish();
                 }
             }
@@ -218,6 +220,7 @@ public class ScheduleMeeting extends AppCompatActivity {
         myIntent.putExtra(getString(R.string.request_code), SCHEDULE_MEETING);
         this.startActivityForResult(myIntent, 1);
     }
+
 
     public static TextView getStartTimeInput() {
         return startTimeInput;
