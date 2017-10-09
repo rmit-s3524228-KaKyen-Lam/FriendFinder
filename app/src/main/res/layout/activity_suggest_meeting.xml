@@ -39,25 +39,25 @@
         app:layout_constraintTop_toBottomOf="@+id/nameTitle" />
 
     <TextView
-        android:id="@+id/distanceDisplay"
+        android:id="@+id/timeDisplay"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="0dp"
         android:layout_marginTop="32dp"
-        android:text="Distance"
+        android:text="Meeting Time"
         android:textAppearance="@style/TextAppearance.AppCompat.Body1"
         app:layout_constraintLeft_toLeftOf="@+id/suggestMeetingNameField"
         app:layout_constraintTop_toBottomOf="@+id/suggestMeetingNameField" />
 
     <TextView
-        android:id="@+id/distanceInput"
+        android:id="@+id/timeInput"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="0dp"
         android:layout_marginTop="0dp"
         android:text="TextView"
-        app:layout_constraintLeft_toLeftOf="@+id/distanceDisplay"
-        app:layout_constraintTop_toBottomOf="@+id/distanceDisplay" />
+        app:layout_constraintLeft_toLeftOf="@+id/timeDisplay"
+        app:layout_constraintTop_toBottomOf="@+id/timeDisplay" />
 
     <Button
         android:id="@+id/suggestMeetingButton"
@@ -90,4 +90,25 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toRightOf="@+id/suggestMeetingButton"
         app:layout_constraintRight_toLeftOf="@+id/suggestMeetingCancelButton" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="0dp"
+        android:layout_marginTop="32dp"
+        android:text="Midpoint Location"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+        app:layout_constraintLeft_toLeftOf="@+id/timeInput"
+        app:layout_constraintTop_toBottomOf="@+id/timeInput" />
+
+    <TextView
+        android:id="@+id/midpointField"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="0dp"
+        android:layout_marginTop="0dp"
+        android:text="TextView"
+        app:layout_constraintLeft_toLeftOf="@+id/textView"
+        app:layout_constraintTop_toBottomOf="@+id/textView" />
 </android.support.constraint.ConstraintLayout>

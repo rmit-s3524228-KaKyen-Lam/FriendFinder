@@ -116,7 +116,11 @@ public class ScheduleMeeting extends AppCompatActivity {
 
         if (requestCode == SUGGEST_MEETING) {
             String name = (String) prevBundle.get(getString(R.string.name));
+            String location = (String) prevBundle.get("location");
+            String time = (String) prevBundle.get("startTime");
             inviteList.add(name);
+            locationInput.setText(location);
+            startTimeInput.setText(time);
         }
 
         //Activities after clicking Buttons

@@ -52,29 +52,10 @@
             android:label="@string/title_activity_maps2" />
         <activity android:name=".SuggestMeeting" />
 
-        <receiver
-            android:name=".NetworkReceiver"
-            android:enabled="true"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
-            </intent-filter>
-        </receiver>
-
         <activity android:name=".UserSettings" />
-
-        <receiver
-            android:name=".AlarmReceiver"
-            android:enabled="true"
-            android:exported="true" />
 
         <service
             android:name=".NotificationService"
-            android:enabled="true"
-            android:exported="true" />
-
-        <receiver
-            android:name=".ReminderReceiver"
             android:enabled="true"
             android:exported="true" />
 

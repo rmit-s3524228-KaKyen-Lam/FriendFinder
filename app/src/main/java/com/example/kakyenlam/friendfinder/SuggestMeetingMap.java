@@ -65,11 +65,11 @@ public class SuggestMeetingMap extends FragmentActivity implements OnMapReadyCal
     private String provider;
     private static final int MINUTE_RANGE = 10;
     private static final int SECOND_RANGE = 30;
-    private ArrayList<String> friendLocationList = new ArrayList<>();
     ArrayList <String> nameList = new ArrayList<>();
-    ArrayList <Double> distanceList = new ArrayList<>();
-    private HashMap<String,Double> distanceTotalMap = new HashMap<>();
-    LinkedHashMap <String, Double> sortedDistanceMap = new LinkedHashMap<>();
+    private HashMap<String,LatLng> midpointMap = new HashMap<>();
+    ArrayList <Long> timeList = new ArrayList<>();
+    private HashMap<String,Long> timeTotalMap = new HashMap<>();
+
     Database db;
 
     @Override
@@ -152,15 +152,18 @@ public class SuggestMeetingMap extends FragmentActivity implements OnMapReadyCal
         mMap.addMarker(mark);
     }
 
-    double[] distanceSum =  new double[2];
+    long[] timeSum =  new long[2];
 
     public void getFriendLocation(LatLng origin) {
 
         DummyLocationService dls = DummyLocationService.getSingletonInstance(this);
+
         Calendar c = Calendar.getInstance();
         SimpleDateFormat df = new SimpleDateFormat("HH:mm");
         String formattedDate = df.format(c.getTime());
         Date selectedTime = TimeConverter.stringToTimeConverter(formattedDate);
+
+//        Date selectedTime = TimeConverter.stringToTimeConverter("09:45");
         List<DummyLocationService.FriendLocation> extractedList = dls.getFriendLocationsForTime(selectedTime, MINUTE_RANGE, SECOND_RANGE);
         List<Friend> friendList= db.getAllFriends();
         HashSet<String> currentFriendsNames = new HashSet<>();
@@ -179,30 +182,30 @@ public class SuggestMeetingMap extends FragmentActivity implements OnMapReadyCal
                 setMarker(dest, "Friend ", BitmapDescriptorFactory.HUE_BLUE);
 
                 LatLng midpoint = midpointCalc(origin, dest);
+                midpointMap.put(friend.name, midpoint);
                 // Getting URL to the Google Directions API
                 DistanceMatrix.FetchUrl FetchOrigin = new DistanceMatrix.FetchUrl(new DistanceMatrix.myInterface() {
                     @Override
                     public void myMethod(String result) {
-                        String distance = DistanceMatrix.jsonParser(result);
-                        distanceSum[0] = Double.parseDouble(distance);
+                        String time = DistanceMatrix.jsonParser(result);
+                        timeSum[0] = Long.parseLong(time);
                     }
                 });
                 DistanceMatrix.FetchUrl FetchDest = new DistanceMatrix.FetchUrl(new DistanceMatrix.myInterface() {
                     @Override
                     public void myMethod(String result) {
-                        String distance = DistanceMatrix.jsonParser(result);
-                        distanceSum[1] = Double.parseDouble(distance);
-                        distanceList.add(distanceSum[0] + distanceSum[1]);
+                        String time = DistanceMatrix.jsonParser(result);
+                        timeSum[1] = Long.parseLong(time);
+                        timeList.add(timeSum[0] + timeSum[1]);
 
-                        if (distanceList.size() == nameList.size()) {
+                        if (timeList.size() == nameList.size()) {
                             for (int i = 0; i < nameList.size(); i++) {
-                                System.out.println(nameList.get(i) + ": " + distanceList.get(i));
-                                distanceTotalMap.put(nameList.get(i), distanceList.get(i));
+                                System.out.println(nameList.get(i) + ": " + timeList.get(i));
+                                timeTotalMap.put(nameList.get(i), timeList.get(i));
                             }
 
-                            sortedDistanceMap = sortDistance(distanceTotalMap);
-                            for (String name : sortedDistanceMap.keySet()) {
-                                System.out.println(name + ": " + sortedDistanceMap.get(name));
+                            for (String name : timeTotalMap.keySet()) {
+                                System.out.println(name + ": " + timeTotalMap.get(name));
                             }
 
                             Timer timer = new Timer();
@@ -210,7 +213,7 @@ public class SuggestMeetingMap extends FragmentActivity implements OnMapReadyCal
 
                                 public void run() {
 
-                                    sendToSuggestMeeting(sortedDistanceMap);
+                                    sendToSuggestMeeting(timeTotalMap,midpointMap);
 
                                 }
 
@@ -234,12 +237,11 @@ public class SuggestMeetingMap extends FragmentActivity implements OnMapReadyCal
     @Override
     public boolean onMyLocationButtonClick() {
         mMap.clear();
-        Toast.makeText(this, "Calculating nearest distance...", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Calculating time taken...", Toast.LENGTH_SHORT).show();
 
         LatLng origin = new LatLng (getLocation().getLatitude(), getLocation().getLongitude());
         setMarker(origin, "Current", BitmapDescriptorFactory.HUE_RED);
 
-//        LatLng dest = new LatLng(-37.809837, 144.965215);
 
         getFriendLocation(origin);
 
@@ -272,39 +274,20 @@ public class SuggestMeetingMap extends FragmentActivity implements OnMapReadyCal
         return location;
     }
 
-    public LinkedHashMap<String, Double> sortDistance(HashMap<String, Double> distanceMap) {
 
-
-        Set<Map.Entry<String, Double>> distanceMapEntrySet = distanceMap.entrySet();
-        List<Map.Entry<String, Double>> entryList = new ArrayList<>(distanceMapEntrySet);
-
-            Collections.sort(entryList, new Comparator<Map.Entry<String, Double>>() {
-
-                @Override
-                public int compare(Map.Entry<String, Double> o1, Map.Entry<String, Double> o2) {
-                    return o1.getValue().compareTo(o2.getValue());
-                }
-            });
-
-
-        LinkedHashMap<String, Double> sortedHashMap = new LinkedHashMap<>();
-
-        for (Map.Entry<String, Double> entry : entryList) {
-            sortedHashMap.put(entry.getKey(), entry.getValue());
-        }
-
-        return sortedHashMap;
-    }
 
 
     /**
      * Send details of selected Friend object to FriendDetails class
      *
-     * @param sortedDistanceMap id selected from list
+     * @param sortedTimeMap id selected from list
      */
-    public void sendToSuggestMeeting(HashMap <String,Double> sortedDistanceMap) {
+    public void sendToSuggestMeeting(HashMap <String,Long> sortedTimeMap , HashMap <String,LatLng> midpointMap) {
         Intent suggestMeetingIntent = new Intent(this, SuggestMeeting.class);
-        suggestMeetingIntent.putExtra("sortedDistanceMap", sortedDistanceMap);
+        Bundle suggestData = new Bundle();
+        suggestData.putSerializable("midpointMap", midpointMap);
+        suggestData.putSerializable("sortedTimeMap", sortedTimeMap);
+        suggestMeetingIntent.putExtras(suggestData);
         this.startActivityForResult(suggestMeetingIntent, 1);
     }
 }

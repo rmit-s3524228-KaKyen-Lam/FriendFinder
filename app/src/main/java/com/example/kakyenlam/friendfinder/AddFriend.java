@@ -42,8 +42,8 @@ public class AddFriend extends AppCompatActivity {
     private String id;
     private Date birthday;
     private Uri photoUri;
-    private Bitmap bitmap;
     private Database db;
+    Bitmap bitmap;
 
     //View variables
     static TextView dateDisplay;
