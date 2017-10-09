@@ -160,8 +160,6 @@ public class SuggestMeetingMap extends FragmentActivity implements OnMapReadyCal
         Calendar c = Calendar.getInstance();
         SimpleDateFormat df = new SimpleDateFormat("HH:mm");
         String formattedDate = df.format(c.getTime());
-// Now formattedDate have current date/time
-        Toast.makeText(this, formattedDate, Toast.LENGTH_SHORT).show();
         Date selectedTime = TimeConverter.stringToTimeConverter(formattedDate);
         List<DummyLocationService.FriendLocation> extractedList = dls.getFriendLocationsForTime(selectedTime, MINUTE_RANGE, SECOND_RANGE);
         List<Friend> friendList= db.getAllFriends();

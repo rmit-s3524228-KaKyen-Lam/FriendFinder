@@ -8,7 +8,11 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 
+/*https://www.youtube.com/watch?v=tyVaPHv-RGo*/
+
 public class NotificationService extends Service {
+
+    private static final int NOTIFICATION_ID = 1;
     public NotificationService() {
     }
 
@@ -22,18 +26,21 @@ public class NotificationService extends Service {
     public void onCreate(){
 
         NotificationManager mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-        Intent intent1 = new Intent(this.getApplicationContext(), MeetingList.class);
-        PendingIntent pIntent = PendingIntent.getActivity(this, 0, intent1, 0);
+        Intent meetingIntent = new Intent(this.getApplicationContext(), MeetingList.class);
+        Intent remindIntent = new Intent(this.getApplicationContext(), Reminder.class);
+        remindIntent.putExtra("notificationId",NOTIFICATION_ID);
+        PendingIntent pIntentOpen = PendingIntent.getActivity(this, 0, meetingIntent, 0);
+        PendingIntent pIntentRemind = PendingIntent.getActivity(this, 0, remindIntent, 0);
 
-        Notification mBuilder =
+        NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(this)
-                .setContentTitle("Log Steps!")
-                .setContentText("Log your steps for today")
+                .setContentTitle("You have an upcoming meeting.")
                 .setSmallIcon(R.drawable.ic_stat_meeting)
-                        .setContentIntent(pIntent)
-                        .build();
+                        .addAction(R.drawable.common_google_signin_btn_icon_dark, "Open", pIntentOpen)
+                        .addAction(R.drawable.common_google_signin_btn_icon_dark, "Remind", pIntentRemind)
+                        .setAutoCancel(true);
 
 
-        mNM.notify(1, mBuilder);
+        mNM.notify(NOTIFICATION_ID, mBuilder.build());
     }
 }

@@ -1,5 +1,6 @@
 package com.example.kakyenlam.friendfinder;
 
+import android.app.NotificationManager;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -58,6 +59,9 @@ public class MeetingList extends AppCompatActivity {
         setContentView(R.layout.activity_meeting_list);
 
         db = new Database(this);
+
+        NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        manager.cancel(1);
 
         //Connecting variables with View objects
         meetingListView = (ListView) findViewById(R.id.meetingList);
